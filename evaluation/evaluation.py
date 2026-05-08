@@ -54,6 +54,32 @@ class TextOnlyTask(AutoTask):
         }]
 
 
+EXPLICIT_ANALYSIS_SUFFIX = """
+
+# Mandatory response format
+Your response MUST contain exactly two sections and no other prose.
+The first non-empty line MUST begin with:
+Analysis:
+The second section MUST begin with:
+Operation:
+Under Operation:, output exactly one fenced python code block containing exactly one line: do(...) or finish(...).
+Never output do(...) or finish(...) before the Analysis: line.
+""".strip()
+
+
+class TextOnlyExplicitAnalysisTask(TextOnlyTask):
+    def set_system_prompt(self, instruction):
+        self.record.history = [{
+            "role": "system",
+            "content": (
+                SYSTEM_PROMPT_ANDROID_TEXT_GPT
+                + "\n\n"
+                + EXPLICIT_ANALYSIS_SUFFIX
+                + f"\n\nTask Instruction: {instruction}"
+            )
+        }]
+
+
 class ScreenshotTask(TextOnlyTask):
     def run_step(self, round_count):
         self.record.update_before(controller=self.controller, need_screenshot=True, ac_status=self.accessibility,

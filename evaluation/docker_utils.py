@@ -12,18 +12,29 @@ def run_docker_command(command):
 
 
 def create_docker_container(docker_image_name, docker_port, docker_local_port):
-    command = f"docker run -itd --privileged  -p {docker_local_port}:{docker_port} {docker_image_name}"
-    returncode, stdout, stderr = run_docker_command(command)
-    time.sleep(10)
-    if returncode == 0:
-        container_id = stdout.strip()
-        # TODO: add to final docker
-        command = f"docker cp adb_client.py {container_id}:/"
+    last_error = ""
+    for attempt in range(1, 6):
+        command = f"docker run -itd --privileged -p {docker_local_port}:{docker_port} {docker_image_name}"
         returncode, stdout, stderr = run_docker_command(command)
-        return container_id
-    else:
-        print(returncode, stdout, stderr)
-        raise Exception(f"Error creating container: {stderr}")
+        if returncode == 0:
+            time.sleep(10)
+            container_id = stdout.strip()
+            # TODO: add to final docker
+            command = f"docker cp adb_client.py {container_id}:/"
+            returncode, stdout, stderr = run_docker_command(command)
+            if returncode == 0:
+                return container_id
+            remove_docker_container(container_id, raise_on_error=False)
+            last_error = stderr
+        else:
+            last_error = stderr
+            print(returncode, stdout, stderr)
+            if "port is already allocated" in stderr:
+                cleanup_containers_on_port(docker_local_port)
+                time.sleep(5 * attempt)
+                continue
+        time.sleep(2 * attempt)
+    raise Exception(f"Error creating container on local port {docker_local_port}: {last_error}")
 
 
 def execute_command_in_container(container_id, command):
@@ -36,16 +47,30 @@ def execute_command_in_container(container_id, command):
         raise Exception(f"Error executing command: {stderr}")
 
 
-def remove_docker_container(container_id):
+def cleanup_containers_on_port(port):
+    command = f"docker ps -q --filter publish={port}"
+    returncode, stdout, stderr = run_docker_command(command)
+    if returncode != 0:
+        return
+    for container_id in stdout.splitlines():
+        if container_id.strip():
+            remove_docker_container(container_id.strip(), raise_on_error=False)
+
+
+def remove_docker_container(container_id, raise_on_error=True):
+    if not container_id:
+        return "No container to remove."
     stop_command = f"docker stop {container_id}"
     remove_command = f"docker rm {container_id}"
 
     run_docker_command(stop_command)
+    time.sleep(2)
     returncode, stdout, stderr = run_docker_command(remove_command)
     if returncode == 0:
         return f"Container {container_id} has been removed."
-    else:
+    if raise_on_error:
         raise Exception(f"Error removing container: {stderr}")
+    return f"Error removing container {container_id}: {stderr}"
 
 
 def cp_docker(local_path, docker_path, container_id, local_to_docker=True):

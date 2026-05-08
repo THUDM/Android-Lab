@@ -10,6 +10,8 @@ from utils_mobile.xml_tool import UIXMLTree
 
 def get_compressed_xml(xml_path, type="plain_text", version="v1"):
     xml_parser = UIXMLTree()
+    if not xml_path or xml_path == "ERROR":
+        return "" if type == "plain_text" else "{}"
     with open(xml_path, 'r', encoding='utf-8') as f:
         xml_str = f.read()
     try:
@@ -20,7 +22,7 @@ def get_compressed_xml(xml_path, type="plain_text", version="v1"):
         if type == "plain_text":
             compressed_xml = compressed_xml.strip()
     except Exception as e:
-        compressed_xml = None
+        compressed_xml = xml_str if type == "plain_text" else "{}"
         print(f"XML compressed failure: {e}")
     return compressed_xml
 
@@ -174,9 +176,9 @@ class JSONRecorder:
         xml_compressed = get_compressed_xml(xml_path, version=self.xml_compressed_version)
         with open(os.path.join(self.xml_file_path, f"{self.turn_number}_compressed_xml.txt"), 'w',
                   encoding='utf-8') as f:
-            f.write(xml_compressed)
+            f.write(xml_compressed or "")
         self.page_executor.latest_xml = xml_compressed
-        return xml_compressed
+        return xml_compressed or ""
 
     def get_latest_xml_tree(self):
         if len(self.contents) == 0:
@@ -187,7 +189,7 @@ class JSONRecorder:
         else:
             xml_path = self.contents[-1]['xml']
         xml_compressed = get_compressed_xml(xml_path, type="json")
-        return json.loads(xml_compressed)
+        return json.loads(xml_compressed or "{}")
 
     def update_execution(self, exe_res):
         if len(self.contents) == 0:

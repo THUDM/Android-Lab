@@ -283,6 +283,33 @@ class TextOnlyMobileTask_AutoTest(AutoTest):
         return TextOnlyExecutor(self.controller, self.config)
 
 
+class CoTGenerate_AutoTest(TextOnlyMobileTask_AutoTest):
+    """Semantic alias for the native AndroidLab TextOnly CoT generate path."""
+
+
+class CoTExplicitAnalysis_AutoTest(TextOnlyMobileTask_AutoTest):
+    """Text-only CoT generate path with an explicit Analysis/Operation format."""
+
+    def get_agent(self):
+        task_agent = TextOnlyExplicitAnalysisTask(
+            self.instruction, self.controller, self.page_executor,
+            self.llm_agent, self.record, self.command_per_step,
+        )
+        return task_agent
+
+
+from evaluation.rank_then_verify import RankThenVerifyTask
+
+
+class RankThenVerify_AutoTest(TextOnlyMobileTask_AutoTest):
+    def get_agent(self):
+        task_agent = RankThenVerifyTask(
+            self.instruction, self.controller, self.page_executor,
+            self.llm_agent, self.record, self.command_per_step,
+        )
+        return task_agent
+
+
 class ScreenshotMobileTask_AutoTest(TextOnlyMobileTask_AutoTest):
     def get_agent(self):
         task_agent = ScreenshotTask(self.instruction, self.controller, self.page_executor, self.llm_agent, self.record,

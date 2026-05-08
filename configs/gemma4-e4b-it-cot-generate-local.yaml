@@ -1,0 +1,25 @@
+agent:
+  name: OpenAIAgent
+  args:
+    api_key: "EMPTY"
+    api_base: "http://127.0.0.1:18000/v1"
+    model_name: "gemma4-e4b-it"
+    max_new_tokens: 1024
+    temperature: 0.0
+    top_p: 0.7
+
+task:
+  class: CoTGenerate_AutoTest
+  args:
+    save_dir: "./logs/evaluation"
+    max_rounds: 25
+    request_interval: 3
+    mode: "in_app"
+
+eval:
+  avd_name: Pixel_7_Pro_API_33
+  avd_log_dir: ./logs/evaluation
+  docker: True
+  docker_args:
+    image_name: android_eval:latest
+    port: 6060

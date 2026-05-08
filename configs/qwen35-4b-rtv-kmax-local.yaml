@@ -1,0 +1,35 @@
+agent:
+  name: OpenAIAgent
+  args:
+    api_key: "EMPTY"
+    api_base: "http://127.0.0.1:18000/v1"
+    model_name: "qwen35-4b"
+    max_new_tokens: 512
+    temperature: 0.0
+    top_p: 0.7
+    top_logprobs: 20
+    request_timeout: 120
+    rtv_verify_workers: 8
+    rtv_k: "max"
+    rtv_refine_mode: "verify"
+    rtv_max_candidates: 26
+    rtv_xml_max_chars: 16000
+    rtv_include_control_actions: true
+    rtv_include_type_action: true
+
+task:
+  class: RankThenVerify_AutoTest
+  args:
+    save_dir: "./logs/evaluation"
+    max_rounds: 25
+    request_interval: 2
+    mode: "in_app"
+
+eval:
+  avd_name: Pixel_7_Pro_API_33
+  avd_log_dir: ./logs/evaluation
+  docker: True
+  docker_args:
+    image_name: android_eval:latest
+    port: 6060
+

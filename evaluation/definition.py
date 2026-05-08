@@ -13,15 +13,16 @@ def encode_image(image_path):
 
 
 def get_code_snippet(content):
-    code = re.search(r'```.*?([\s\S]+?)```', content)
-    if code is None:
-        return content
-        # print(content)
-        # raise RuntimeError("No available code found!")
-    code = code.group(1).strip()
-    code = code.split("\n")[-1]
-
-    return code
+    if content is None:
+        return ""
+    code_blocks = re.findall(r'```(?:python)?\s*([\s\S]+?)```', content, flags=re.IGNORECASE)
+    candidates = code_blocks or [content]
+    for candidate in candidates:
+        for line in candidate.splitlines():
+            line = line.strip()
+            if re.match(r'^(do|finish)\s*\(', line):
+                return line
+    return content
 
 
 def handle_backoff(details):
